@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>AetherMine</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #03050f;
+    --bg2: #070d1f;
+    --bg3: #0c1530;
+    --card: rgba(12, 22, 50, 0.85);
+    --border: rgba(80, 160, 255, 0.18);
+    --accent: #00d4ff;
+    --accent2: #7b5fff;
+    --accent3: #ff6b35;
+    --gold: #ffd700;
+    --green: #00ff9d;
+    --text: #e8f4ff;
+    --muted: #7a9cc4;
+    --glow: 0 0 20px rgba(0,212,255,0.3);
+    --glow2: 0 0 30px rgba(123,95,255,0.4);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Rajdhani',sans-serif; }
+
+  /* STARS */
+  #stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .star { position:absolute; border-radius:50%; background:#fff; animation:twinkle var(--d) ease-in-out infinite; opacity:0; }
+  @keyframes twinkle { 0%,100%{opacity:0;transform:scale(0.5)} 50%{opacity:var(--o);transform:scale(1)} }
+
+  /* LAYOUT */
+  #app { position:relative; z-index:1; width:100%; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+  /* HEADER */
+  #header {
+    flex-shrink:0;
+    padding:14px 18px 10px;
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+    border-bottom:1px solid var(--border);
+  }
+  .logo { display:flex; align-items:center; gap:8px; }
+  .logo-icon { width:32px; height:32px; }
+  .logo-text { font-family:'Orbitron',sans-serif; font-size:16px; font-weight:900; letter-spacing:2px;
+    background:linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .user-info { text-align:right; }
+  .user-name { font-size:13px; font-weight:600; color:var(--text); }
+  .user-plan { font-size:11px; color:var(--muted); }
+
+  /* NAV */
+  #nav {
+    flex-shrink:0;
+    display:flex; background:rgba(7,13,31,0.95); border-top:1px solid var(--border);
+    order:99;
+  }
+  .nav-btn { flex:1; padding:10px 4px 8px; display:flex; flex-direction:column; align-items:center; gap:3px;
+    border:none; background:transparent; color:var(--muted); cursor:pointer; transition:all 0.2s; font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.5px; }
+  .nav-btn svg { width:20px; height:20px; transition:all 0.2s; }
+  .nav-btn.active { color:var(--accent); }
+  .nav-btn.active svg { filter:drop-shadow(0 0 6px var(--accent)); }
+
+  /* PAGES */
+  #pages { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
+  #pages::-webkit-scrollbar { display:none; }
+  .page { display:none; padding:16px; min-height:100%; }
+  .page.active { display:block; }
+
+  /* MINE PAGE */
+  .balance-card {
+    background:linear-gradient(135deg, rgba(0,212,255,0.08), rgba(123,95,255,0.08));
+    border:1px solid var(--border); border-radius:20px; padding:20px;
+    text-align:center; margin-bottom:18px; position:relative; overflow:hidden;
+  }
+  .balance-card::before {
+    content:''; position:absolute; inset:0; border-radius:20px;
+    background:radial-gradient(ellipse at 50% 0%, rgba(0,212,255,0.12) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .balance-label { font-size:11px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+  .balance-amount { font-family:'Orbitron',sans-serif; font-size:36px; font-weight:900;
+    background:linear-gradient(90deg, var(--accent), var(--green)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    line-height:1; margin-bottom:4px; }
+  .balance-sub { font-size:13px; color:var(--muted); }
+  .balance-row { display:flex; gap:10px; justify-content:center; margin-top:12px; }
+  .stat-pill { background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:20px; padding:6px 14px; font-size:12px; color:var(--muted); }
+  .stat-pill span { color:var(--text); font-weight:700; }
+
+  /* MINER */
+  .miner-area { display:flex; flex-direction:column; align-items:center; margin:10px 0 20px; }
+  .miner-wrap { position:relative; width:160px; height:160px; }
+  .miner-ring { position:absolute; inset:0; border-radius:50%; border:2px solid transparent;
+    background:linear-gradient(var(--bg),var(--bg)) padding-box,
+    linear-gradient(135deg, var(--accent), var(--accent2), var(--accent)) border-box;
+    animation:spin 8s linear infinite; }
+  .miner-ring2 { position:absolute; inset:10px; border-radius:50%; border:1px solid rgba(0,212,255,0.2);
+    animation:spin 5s linear infinite reverse; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .miner-btn {
+    position:absolute; inset:20px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, rgba(0,212,255,0.25), rgba(7,13,31,0.9));
+    border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    transition:transform 0.1s; box-shadow:0 0 30px rgba(0,212,255,0.2), inset 0 0 20px rgba(0,0,0,0.5);
+  }
+  .miner-btn:active { transform:scale(0.94); }
+  .miner-btn svg { width:44px; height:44px; }
+  .miner-btn-label { font-family:'Orbitron',sans-serif; font-size:9px; color:var(--accent); letter-spacing:1px; }
+  .tap-float { position:absolute; font-family:'Orbitron',sans-serif; font-size:14px; font-weight:700; color:var(--green);
+    pointer-events:none; animation:floatUp 1s ease-out forwards; }
+  @keyframes floatUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-70px) scale(0.7)} }
+  .miner-power { margin-top:12px; font-size:13px; color:var(--muted); }
+  .miner-power span { color:var(--accent); font-weight:700; }
+
+  /* PROGRESS */
+  .progress-section { margin-bottom:18px; }
+  .progress-label { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  .progress-bar { height:8px; background:rgba(255,255,255,0.07); border-radius:4px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:4px; background:linear-gradient(90deg, var(--accent2), var(--accent));
+    transition:width 0.3s ease; position:relative; }
+  .progress-fill::after { content:''; position:absolute; right:0; top:0; bottom:0; width:20px;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4)); animation:shimmer 1.5s ease-in-out infinite; }
+  @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+  /* BOOST TIMER */
+  .boost-card {
+    background:linear-gradient(135deg, rgba(255,107,53,0.1), rgba(123,95,255,0.1));
+    border:1px solid rgba(255,107,53,0.25); border-radius:14px; padding:14px 16px;
+    display:flex; align-items:center; gap:12px; margin-bottom:18px;
+  }
+  .boost-icon { font-size:28px; }
+  .boost-info { flex:1; }
+  .boost-title { font-size:13px; font-weight:700; color:var(--accent3); }
+  .boost-timer { font-family:'Orbitron',sans-serif; font-size:11px; color:var(--muted); margin-top:2px; }
+
+  /* PLANS PAGE */
+  .page-title { font-family:'Orbitron',sans-serif; font-size:16px; font-weight:700; margin-bottom:4px;
+    background:linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .page-sub { font-size:12px; color:var(--muted); margin-bottom:18px; }
+  .wallet-notice { background:rgba(0,255,157,0.07); border:1px solid rgba(0,255,157,0.2); border-radius:12px; padding:12px 14px; margin-bottom:18px; font-size:12px; }
+  .wallet-notice strong { color:var(--green); display:block; margin-bottom:4px; font-size:13px; }
+  .wallet-addr { font-family:'Orbitron',sans-serif; font-size:10px; color:var(--muted); word-break:break-all; }
+  .copy-btn { background:rgba(0,255,157,0.15); border:1px solid rgba(0,255,157,0.3); border-radius:8px; padding:5px 12px;
+    color:var(--green); font-size:11px; font-family:'Rajdhani',sans-serif; font-weight:600; cursor:pointer; margin-top:8px; transition:all 0.2s; }
+  .copy-btn:active { background:rgba(0,255,157,0.3); }
+
+  .plan-card {
+    border-radius:16px; padding:16px; margin-bottom:14px; position:relative; overflow:hidden; cursor:pointer;
+    transition:transform 0.2s, box-shadow 0.2s;
+    border:1px solid transparent;
+  }
+  .plan-card:active { transform:scale(0.98); }
+  .plan-trial { background:linear-gradient(135deg, rgba(0,200,100,0.1), rgba(0,150,70,0.08)); border-color:rgba(0,200,100,0.25); }
+  .plan-starter { background:linear-gradient(135deg, rgba(100,150,255,0.1), rgba(50,80,180,0.08)); border-color:rgba(100,150,255,0.25); }
+  .plan-bronze { background:linear-gradient(135deg, rgba(205,127,50,0.15), rgba(150,80,20,0.08)); border-color:rgba(205,127,50,0.35); }
+  .plan-silver { background:linear-gradient(135deg, rgba(180,180,200,0.15), rgba(120,120,150,0.08)); border-color:rgba(180,180,200,0.35); }
+  .plan-gold { background:linear-gradient(135deg, rgba(255,215,0,0.15), rgba(200,150,0,0.08)); border-color:rgba(255,215,0,0.4); }
+  .plan-platinum { background:linear-gradient(135deg, rgba(100,220,255,0.15), rgba(0,180,230,0.08)); border-color:rgba(100,220,255,0.4); }
+  .plan-diamond { background:linear-gradient(135deg, rgba(185,80,255,0.2), rgba(100,0,200,0.1)); border-color:rgba(185,80,255,0.5); box-shadow:0 0 20px rgba(185,80,255,0.15); }
+
+  .plan-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .plan-name-row { display:flex; align-items:center; gap:8px; }
+  .plan-emoji { font-size:22px; }
+  .plan-name { font-family:'Orbitron',sans-serif; font-size:14px; font-weight:700; }
+  .plan-trial .plan-name { color:#00ff9d; }
+  .plan-starter .plan-name { color:#7faeff; }
+  .plan-bronze .plan-name { color:#cd7f32; }
+  .plan-silver .plan-name { color:#b4b4c8; }
+  .plan-gold .plan-name { color:var(--gold); }
+  .plan-platinum .plan-name { color:#64dcff; }
+  .plan-diamond .plan-name { color:#b950ff; }
+  .plan-price { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:900; }
+  .plan-trial .plan-price { color:#00ff9d; }
+  .plan-starter .plan-price { color:#7faeff; }
+  .plan-bronze .plan-price { color:#cd7f32; }
+  .plan-silver .plan-price { color:#b4b4c8; }
+  .plan-gold .plan-price { color:var(--gold); }
+  .plan-platinum .plan-price { color:#64dcff; }
+  .plan-diamond .plan-price { color:#b950ff; }
+
+  .plan-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px; }
+  .plan-stat { background:rgba(0,0,0,0.2); border-radius:8px; padding:6px 8px; text-align:center; }
+  .plan-stat-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; }
+  .plan-stat-val { font-size:13px; font-weight:700; color:var(--text); }
+
+  .plan-perks { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; }
+  .perk { background:rgba(255,255,255,0.06); border-radius:6px; padding:3px 8px; font-size:11px; color:var(--muted); }
+
+  .plan-buy-btn {
+    width:100%; padding:11px; border-radius:10px; border:none; font-family:'Orbitron',sans-serif;
+    font-size:12px; font-weight:700; letter-spacing:1px; cursor:pointer; transition:all 0.2s;
+  }
+  .plan-trial .plan-buy-btn { background:linear-gradient(90deg,#00c864,#007a3d); color:#fff; }
+  .plan-starter .plan-buy-btn { background:linear-gradient(90deg,#4a7fff,#2255cc); color:#fff; }
+  .plan-bronze .plan-buy-btn { background:linear-gradient(90deg,#cd7f32,#8b4513); color:#fff; }
+  .plan-silver .plan-buy-btn { background:linear-gradient(90deg,#aaaacc,#666688); color:#fff; }
+  .plan-gold .plan-buy-btn { background:linear-gradient(90deg,#ffd700,#b8860b); color:#000; }
+  .plan-platinum .plan-buy-btn { background:linear-gradient(90deg,#00d4ff,#0080b0); color:#000; }
+  .plan-diamond .plan-buy-btn { background:linear-gradient(90deg,#b950ff,#6600cc); color:#fff; box-shadow:0 0 20px rgba(185,80,255,0.4); }
+  .plan-buy-btn:active { opacity:0.85; transform:scale(0.98); }
+  .popular-badge { position:absolute; top:12px; right:50px; background:linear-gradient(90deg,var(--accent3),#ff3366); border-radius:6px; padding:2px 8px; font-size:9px; font-weight:700; color:#fff; letter-spacing:1px; }
+
+  /* REFERRAL PAGE */
+  .ref-hero { text-align:center; margin-bottom:20px; }
+  .ref-icon { font-size:48px; margin-bottom:10px; }
+  .ref-title { font-family:'Orbitron',sans-serif; font-size:18px; font-weight:900; margin-bottom:6px;
+    background:linear-gradient(90deg,var(--accent),var(--green)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .ref-desc { font-size:13px; color:var(--muted); line-height:1.5; }
+  .ref-link-box { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:16px; }
+  .ref-link-label { font-size:11px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+  .ref-link { font-family:'Orbitron',sans-serif; font-size:11px; color:var(--accent); word-break:break-all; margin-bottom:10px; }
+  .share-btn { width:100%; padding:12px; border-radius:10px; border:none; background:linear-gradient(90deg,var(--accent2),var(--accent)); color:#fff;
+    font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; letter-spacing:1px; cursor:pointer; }
+  .ref-stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+  .ref-stat-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; text-align:center; }
+  .ref-stat-num { font-family:'Orbitron',sans-serif; font-size:28px; font-weight:900; color:var(--accent); }
+  .ref-stat-label { font-size:12px; color:var(--muted); margin-top:4px; }
+  .ref-how { background:linear-gradient(135deg, rgba(0,212,255,0.06), rgba(123,95,255,0.06)); border:1px solid var(--border); border-radius:14px; padding:16px; }
+  .ref-how-title { font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:var(--accent); margin-bottom:12px; }
+  .ref-step { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
+  .step-num { width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,var(--accent2),var(--accent)); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+  .step-text { font-size:13px; color:var(--muted); line-height:1.4; }
+
+  /* LEADERBOARD */
+
+  .lb-row { display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:8px; }
+  .lb-rank { font-family:'Orbitron',sans-serif; font-size:16px; font-weight:900; width:28px; text-align:center; color:var(--muted); }
+  .lb-rank.top1 { color:var(--gold); }
+  .lb-rank.top2 { color:#c0c0c0; }
+  .lb-rank.top3 { color:#cd7f32; }
+  .lb-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .lb-info { flex:1; }
+  .lb-name { font-size:14px; font-weight:700; }
+  .lb-plan { font-size:11px; color:var(--muted); }
+  .lb-amount { font-family:'Orbitron',sans-serif; font-size:13px; color:var(--green); font-weight:700; }
+
+  /* PROFILE */
+  .profile-hero { text-align:center; margin-bottom:20px; padding:20px; background:var(--card); border:1px solid var(--border); border-radius:20px; }
+  .profile-avatar { width:70px; height:70px; border-radius:50%; border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 10px; background:var(--bg3); }
+  .profile-name { font-family:'Orbitron',sans-serif; font-size:16px; font-weight:700; }
+  .profile-plan-badge { display:inline-block; margin-top:6px; padding:4px 14px; border-radius:20px; font-size:11px; font-weight:700; }
+  .badge-free { background:rgba(100,150,255,0.2); color:#7faeff; border:1px solid rgba(100,150,255,0.3); }
+  .badge-diamond { background:rgba(185,80,255,0.2); color:#b950ff; border:1px solid rgba(185,80,255,0.4); }
+  .profile-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:16px; }
+  .profile-stat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 8px; text-align:center; }
+  .profile-stat-num { font-family:'Orbitron',sans-serif; font-size:18px; font-weight:900; color:var(--accent); }
+  .profile-stat-label { font-size:10px; color:var(--muted); margin-top:3px; }
+  .history-title { font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:var(--accent); margin-bottom:12px; letter-spacing:1px; }
+  .tx-row { display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+  .tx-icon { font-size:20px; }
+  .tx-info { flex:1; }
+  .tx-label { font-size:13px; font-weight:600; }
+  .tx-date { font-size:11px; color:var(--muted); margin-top:2px; }
+  .tx-amount { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700; }
+  .tx-amount.earn { color:var(--green); }
+  .tx-amount.spend { color:var(--accent3); }
+
+  /* MODAL */
+  #modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; display:none; align-items:flex-end; justify-content:center; }
+  #modal-overlay.open { display:flex; }
+  #modal { background:var(--bg2); border:1px solid var(--border); border-radius:24px 24px 0 0; padding:24px 20px 32px; width:100%; max-width:500px;
+    animation:slideUp 0.3s ease-out; }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal-handle { width:40px; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; margin:0 auto 20px; }
+  .modal-title { font-family:'Orbitron',sans-serif; font-size:16px; font-weight:700; margin-bottom:4px; }
+  .modal-sub { font-size:13px; color:var(--muted); margin-bottom:20px; }
+  .modal-steps { margin-bottom:20px; }
+  .modal-step { display:flex; gap:12px; margin-bottom:12px; align-items:flex-start; }
+  .modal-step-icon { font-size:18px; width:28px; text-align:center; flex-shrink:0; margin-top:2px; }
+  .modal-step-text { font-size:13px; color:var(--muted); line-height:1.5; }
+  .modal-step-text strong { color:var(--text); }
+  .modal-wallet { background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-family:'Orbitron',sans-serif; font-size:10px; color:var(--accent); word-break:break-all; margin-bottom:16px; }
+  .modal-close { width:100%; padding:13px; border-radius:12px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'Orbitron',sans-serif; font-size:12px; cursor:pointer; }
+
+  /* TOAST */
+  #toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,255,157,0.15); border:1px solid rgba(0,255,157,0.4); border-radius:12px; padding:10px 20px; font-size:13px; color:var(--green); z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; }
+  #toast.show { opacity:1; }
+
+  /* ENERGY BAR */
+  .energy-row { display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+  .energy-label { font-size:11px; color:var(--muted); white-space:nowrap; }
+  .energy-bar { flex:1; height:6px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; }
+  .energy-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--accent3),var(--gold)); transition:width 0.3s; }
+  .energy-num { font-size:11px; color:var(--gold); white-space:nowrap; font-weight:700; }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<div id="app">
+  <div id="header">
+    <div class="logo">
+      <img src="https://i.ibb.co/v6pPTQjz/ideogram-v3-0-imagine-prompt-Aether-Mine-logo-ultra-premium-futuristic-tech-brand-identity-mini-0.png" class="logo-icon" style="width:36px;height:36px;object-fit:contain;border-radius:6px;"/>
+      <span class="logo-text">AETHERMINE</span>
+    </div>
+    <div class="user-info">
+      <div class="user-name" id="hdr-name">Loading...</div>
+      <div class="user-plan" id="hdr-plan">FREE MINER</div>
+    </div>
+  </div>
+
+  <div id="pages">
+    <!-- MINE PAGE -->
+    <div class="page active" id="page-mine">
+      <div class="balance-card">
+        <div class="balance-label">Total Balance</div>
+        <div class="balance-amount" id="balance-display">0.0000</div>
+        <div class="balance-sub">USDT</div>
+        <div class="balance-row">
+          <div class="stat-pill">Power: <span id="stat-power">1x</span></div>
+          <div class="stat-pill">Daily: <span id="stat-daily">0.5</span> USDT</div>
+          <div class="stat-pill">Refs: <span id="stat-refs">0</span></div>
+        </div>
+      </div>
+
+      <div class="energy-row">
+        <span class="energy-label">⚡ Energy</span>
+        <div class="energy-bar"><div class="energy-fill" id="energy-fill" style="width:100%"></div></div>
+        <span class="energy-num" id="energy-num">500/500</span>
+      </div>
+
+      <div class="miner-area">
+        <div class="miner-wrap">
+          <div class="miner-ring" id="ring1"></div>
+          <div class="miner-ring2" id="ring2"></div>
+          <button class="miner-btn" id="mine-btn" onclick="tapMine(event)">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+              <path d="M14 30 L20 18 L26 24 L30 14" stroke="url(#mg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="22" cy="22" r="3" fill="url(#mg2)"/>
+              <defs>
+                <linearGradient id="mg" x1="14" y1="30" x2="30" y2="14"><stop offset="0%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#00ff9d"/></linearGradient>
+                <radialGradient id="mg2"><stop offset="0%" stop-color="#00ff9d"/><stop offset="100%" stop-color="#00d4ff"/></radialGradient>
+              </defs>
+            </svg>
+            <span class="miner-btn-label">TAP</span>
+          </button>
+        </div>
+        <div class="miner-power">Mining Power: <span id="power-display">1x</span></div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-label">
+          <span>Daily Progress</span>
+          <span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+
+      <div class="boost-card">
+        <div class="boost-icon">🚀</div>
+        <div class="boost-info">
+          <div class="boost-title">Auto-Mining Active</div>
+          <div class="boost-timer" id="auto-timer">Upgrade to Silver+ to unlock auto-mining</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLANS PAGE -->
+    <div class="page" id="page-plans">
+      <div class="page-title">Upgrade Miner</div>
+      <div class="page-sub">Boost your mining power with USDT (TRC-20)</div>
+      <div class="wallet-notice">
+        <strong>✅ Payments Are Fully Automatic!</strong>
+        <div style="font-size:12px;color:#7a9cc4;margin:4px 0 8px;">Send exact USDT amount → system detects it → plan activates instantly. No screenshot needed!</div>
+        <strong style="color:#00ff9d;font-size:12px;display:block;margin-bottom:4px;">📬 Payment Wallet (USDT TRC-20)</strong>
+        <div class="wallet-addr" id="wallet-display">TBdoPKgRbhfpfXh6MCkhewgfs4z7nw65P8</div>
+        <button class="copy-btn" onclick="copyWallet()">📋 Copy Address</button>
+      </div>
+      <div id="plans-container"></div>
+    </div>
+
+    <!-- REFERRAL PAGE -->
+    <div class="page" id="page-ref">
+      <div class="ref-hero">
+        <div class="ref-icon">👥</div>
+        <div class="ref-title">Invite & Earn</div>
+        <div class="ref-desc">Earn 10% of every upgrade your referrals make. Diamond plan earns 20%!</div>
+      </div>
+      <div class="ref-stats">
+        <div class="ref-stat-card">
+          <div class="ref-stat-num" id="ref-count">0</div>
+          <div class="ref-stat-label">Total Referrals</div>
+        </div>
+        <div class="ref-stat-card">
+          <div class="ref-stat-num" id="ref-earned">0.00</div>
+          <div class="ref-stat-label">USDT Earned</div>
+        </div>
+      </div>
+      <div class="ref-link-box">
+        <div class="ref-link-label">Your Referral Link</div>
+        <div class="ref-link" id="ref-link">Loading...</div>
+        <button class="share-btn" onclick="shareRef()">🚀 Share & Invite Friends</button>
+      </div>
+      <div class="ref-how">
+        <div class="ref-how-title">HOW IT WORKS</div>
+        <div class="ref-step"><div class="step-num">1</div><div class="step-text">Share your unique referral link with friends</div></div>
+        <div class="ref-step"><div class="step-num">2</div><div class="step-text">They join AetherMine through your link</div></div>
+        <div class="ref-step"><div class="step-num">3</div><div class="step-text">When they upgrade, you earn <strong>10% commission</strong> (20% on Diamond)</div></div>
+        <div class="ref-step"><div class="step-num">4</div><div class="step-text">Commissions are added to your USDT balance automatically</div></div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD PAGE -->
+    <div class="page" id="page-lb">
+      <div class="page-title">Leaderboard</div>
+      <div class="page-sub">Top miners of all time 🏆</div>
+
+      <div id="lb-list"></div>
+      <div id="my-rank-card" style="display:none;margin-top:12px;background:linear-gradient(135deg,rgba(0,212,255,0.1),rgba(123,95,255,0.1));border:1px solid rgba(0,212,255,0.3);border-radius:14px;padding:14px 16px;">
+        <div style="font-size:11px;color:#7a9cc4;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">YOUR POSITION</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;color:#00d4ff;width:32px;" id="my-rank-num">#-</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,212,255,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;">⛏️</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;" id="my-rank-name">You</div>
+            <div style="font-size:11px;color:#7a9cc4;" id="my-rank-plan">Free Plan</div>
+          </div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:13px;color:#00ff9d;font-weight:700;" id="my-rank-bal">$0.0000</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div class="page" id="page-profile">
+      <div class="profile-hero">
+        <div class="profile-avatar" id="profile-avatar">⛏️</div>
+        <div class="profile-name" id="profile-name">Miner</div>
+        <div class="profile-plan-badge badge-free" id="profile-badge">FREE PLAN</div>
+      </div>
+      <div class="profile-stats">
+        <div class="profile-stat"><div class="profile-stat-num" id="ps-taps">0</div><div class="profile-stat-label">Total Taps</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" id="ps-earned">0.00</div><div class="profile-stat-label">Total Earned</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" id="ps-days">1</div><div class="profile-stat-label">Days Active</div></div>
+      </div>
+      <div class="history-title">RECENT ACTIVITY</div>
+      <div id="tx-history"></div>
+    </div>
+  </div>
+
+  <div id="nav">
+    <button class="nav-btn active" onclick="showPage('mine',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+      Mine
+    </button>
+    <button class="nav-btn" onclick="showPage('plans',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Upgrade
+    </button>
+    <button class="nav-btn" onclick="showPage('ref',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><path d="M16 11l2 2 4-4"/></svg>
+      Referral
+    </button>
+    <button class="nav-btn" onclick="showPage('lb',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      Rankings
+    </button>
+    <button class="nav-btn" onclick="showPage('profile',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Profile
+    </button>
+  </div>
+</div>
+
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Upgrade Plan</div>
+    <div class="modal-sub" id="modal-sub">Follow steps below to activate</div>
+    <div class="modal-steps" id="modal-steps"></div>
+    <div class="modal-wallet" id="modal-wallet">TBdoPKgRbhfpfXh6MCkhewgfs4z7nw65P8</div>
+    <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('open')">✕ Close</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const WALLET = 'TBdoPKgRbhfpfXh6MCkhewgfs4z7nw65P8';
+const BOT_USERNAME = 'aetherrmine_bot';
+
+const PLANS = [
+  { id:'trial', name:'Trial', emoji:'🌱', price:3, power:0.5, daily:0.25, monthly:7.50, promo:15, perks:['Trial Badge','Basic Miner','Entry Access','🎁 First Month $15!'], cls:'plan-trial' },
+  { id:'starter', name:'Starter', emoji:'🔷', price:5, power:1, daily:0.5, monthly:15, perks:['Basic Miner Skin','Manual Tap Mining','Entry Access'], cls:'plan-starter' },
+  { id:'bronze', name:'Bronze', emoji:'🥉', price:10, power:2.5, daily:1.2, monthly:36, perks:['Bronze Badge','Bronze Skin','2.5x Power'], cls:'plan-bronze' },
+  { id:'silver', name:'Silver', emoji:'🥈', price:25, power:7, daily:3, monthly:90, perks:['Silver Badge','Auto-Tap','7x Power','Silver Skin'], cls:'plan-silver', popular:true },
+  { id:'gold', name:'Gold', emoji:'🥇', price:50, power:16, daily:6.5, monthly:195, perks:['Gold Badge','Auto-Tap','2x Boost','Gold Skin'], cls:'plan-gold' },
+  { id:'platinum', name:'Platinum', emoji:'💠', price:100, power:35, daily:14, monthly:420, perks:['Platinum Badge','2x Referral','Priority Support','VIP Chat'], cls:'plan-platinum' },
+  { id:'diamond', name:'Diamond', emoji:'💎', price:200, power:80, daily:30, monthly:900, perks:['Diamond Badge','20% Referral','VIP Airdrops','Exclusive Events','Max Power'], cls:'plan-diamond' }
+];
+
+// Simulated leaderboard players — scores grow automatically over time
+const SIM_PLAYERS = [
+  { name:'CryptoKing_X', plan:'Diamond', base:2450.00, rate:30, emoji:'👑' },
+  { name:'TrialHunter', plan:'Trial', base:45.00, rate:0.25, emoji:'🌱' },
+  { name:'AetherMaster', plan:'Platinum', base:1820.50, rate:14, emoji:'🚀' },
+  { name:'MoonMiner99', plan:'Diamond', base:1640.20, rate:30, emoji:'💎' },
+  { name:'HashQueen', plan:'Gold', base:980.75, rate:6.5, emoji:'⛏️' },
+  { name:'BlockWizard', plan:'Silver', base:540.30, rate:3, emoji:'🔮' },
+  { name:'NebulaMiner', plan:'Gold', base:410.00, rate:6.5, emoji:'🌌' },
+  { name:'TurboHash', plan:'Bronze', base:220.15, rate:1.2, emoji:'⚡' },
+  { name:'AetherBabe', plan:'Platinum', base:180.90, rate:14, emoji:'✨' },
+];
+
+// Seed time — when the bot launched (used to calculate score growth)
+const SEED_TIME = new Date('2026-03-28T00:00:00Z').getTime();
+
+function getSimScore(player) {
+  const hoursElapsed = (Date.now() - SEED_TIME) / 3600000;
+  return player.base + (player.rate * hoursElapsed);
+}
+
+function getLeaderboard() {
+  // Get sim players with live scores
+  let board = SIM_PLAYERS.map(p => ({
+    name: p.name,
+    plan: p.plan,
+    emoji: p.emoji,
+    score: getSimScore(p),
+    isMe: false
+  }));
+
+  // Add real user
+  const myScore = state.balance;
+  const myEntry = {
+    name: state.userName || 'You',
+    plan: state.plan,
+    emoji: '⛏️',
+    score: myScore,
+    isMe: true
+  };
+  board.push(myEntry);
+
+  // Sort by score descending
+  board.sort((a, b) => b.score - a.score);
+
+  // Assign ranks
+  board = board.map((p, i) => ({ ...p, rank: i + 1 }));
+  return board;
+}
+
+// State
+let state = {
+  balance: 0,
+  taps: 0,
+  energy: 500,
+  maxEnergy: 500,
+  plan: 'free',
+  power: 1,
+  daily: 0.5,
+  refs: 0,
+  refEarned: 0,
+  userId: null,
+  userName: 'Miner',
+  daysActive: 1
+};
+
+// Init Telegram
+let tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  const user = tg.initDataUnsafe?.user;
+  if (user) {
+    state.userId = user.id;
+    state.userName = user.first_name || 'Miner';
+  }
+}
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('aethermine_state');
+    if (s) Object.assign(state, JSON.parse(s));
+  } catch(e){}
+}
+function saveState() {
+  try { localStorage.setItem('aethermine_state', JSON.stringify(state)); } catch(e){}
+}
+
+loadState();
+if (state.userName === 'Miner' && tg?.initDataUnsafe?.user?.first_name) {
+  state.userName = tg.initDataUnsafe.user.first_name;
+}
+
+// Stars
+function initStars() {
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  for (let i = 0; i < 120; i++) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const r = Math.random() * 1.5 + 0.2;
+    const a = Math.random() * 0.7 + 0.1;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
+    ctx.fill();
+  }
+}
+initStars();
+
+// Navigation
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'lb') renderLeaderboard();
+  if (name === 'profile') renderProfile();
+}
+
+// Tap mining
+function tapMine(e) {
+  if (state.energy <= 0) { showToast('⚡ Energy depleted! Wait for recharge...'); return; }
+  const earn = 0.0001 * state.power;
+  state.balance += earn;
+  state.taps++;
+  state.energy = Math.max(0, state.energy - 1);
+  updateUI();
+  saveState();
+  // Float animation
+  const rect = document.getElementById('mine-btn').getBoundingClientRect();
+  const float = document.createElement('div');
+  float.className = 'tap-float';
+  float.textContent = '+' + earn.toFixed(5);
+  float.style.left = (e.clientX - 30) + 'px';
+  float.style.top = (e.clientY - 20) + 'px';
+  document.body.appendChild(float);
+  setTimeout(() => float.remove(), 1000);
+  // Haptic
+  tg?.HapticFeedback?.impactOccurred('light');
+}
+
+// Energy regen
+setInterval(() => {
+  if (state.energy < state.maxEnergy) {
+    state.energy = Math.min(state.maxEnergy, state.energy + 1);
+    updateUI();
+  }
+}, 3000);
+
+// Auto-mine for silver+
+setInterval(() => {
+  const autoPlans = ['silver','gold','platinum','diamond'];
+  if (autoPlans.includes(state.plan)) {
+    const plan = PLANS.find(p => p.id === state.plan);
+    if (plan) {
+      state.balance += plan.daily / 86400 * 5;
+      updateUI();
+      saveState();
+    }
+  }
+}, 5000);
+
+function updateUI() {
+  document.getElementById('balance-display').textContent = state.balance.toFixed(4);
+  document.getElementById('stat-power').textContent = state.power + 'x';
+  document.getElementById('stat-daily').textContent = state.daily.toFixed(1);
+  document.getElementById('stat-refs').textContent = state.refs;
+  document.getElementById('power-display').textContent = state.power + 'x';
+  document.getElementById('hdr-name').textContent = state.userName;
+  document.getElementById('hdr-plan').textContent = state.plan.toUpperCase() + ' MINER';
+  // Energy
+  const pct = (state.energy / state.maxEnergy * 100);
+  document.getElementById('energy-fill').style.width = pct + '%';
+  document.getElementById('energy-num').textContent = state.energy + '/' + state.maxEnergy;
+  // Progress
+  const dpct = Math.min(100, (state.balance % state.daily) / state.daily * 100);
+  document.getElementById('prog-fill').style.width = dpct + '%';
+  document.getElementById('progress-pct').textContent = dpct.toFixed(0) + '%';
+  // Auto-mine label
+  const autoPlans = ['silver','gold','platinum','diamond'];
+  if (autoPlans.includes(state.plan)) {
+    document.getElementById('auto-timer').textContent = '🟢 Auto-mining active — earning ' + state.daily + ' USDT/day';
+  } else {
+    document.getElementById('auto-timer').textContent = 'Upgrade to Silver+ to unlock auto-mining';
+  }
+  // Ref link
+  document.getElementById('ref-link').textContent = `https://t.me/${BOT_USERNAME}?start=${state.userId || 'share'}`;
+  document.getElementById('ref-count').textContent = state.refs;
+  document.getElementById('ref-earned').textContent = state.refEarned.toFixed(2);
+}
+
+// Render Plans
+function renderPlans() {
+  const container = document.getElementById('plans-container');
+  container.innerHTML = PLANS.map(p => `
+    <div class="plan-card ${p.cls}" onclick="openPlanModal('${p.id}')">
+      ${p.popular ? '<div class="popular-badge">HOT 🔥</div>' : ''}
+      <div class="plan-header">
+        <div class="plan-name-row">
+          <span class="plan-emoji">${p.emoji}</span>
+          <span class="plan-name">${p.name}</span>
+        </div>
+        <span class="plan-price">$${p.price}</span>
+      </div>
+      <div class="plan-stats">
+        <div class="plan-stat"><div class="plan-stat-label">Power</div><div class="plan-stat-val">${p.power}x</div></div>
+        <div class="plan-stat"><div class="plan-stat-label">Daily</div><div class="plan-stat-val">$${p.daily}</div></div>
+        <div class="plan-stat"><div class="plan-stat-label">Monthly</div><div class="plan-stat-val">$${p.monthly}</div></div>
+      </div>
+      <div class="plan-perks">${p.perks.map(pk => `<span class="perk">✓ ${pk}</span>`).join('')}</div>
+      ${p.promo ? `<div style="background:linear-gradient(90deg,rgba(0,255,157,0.15),rgba(0,212,255,0.1));border:1px solid rgba(0,255,157,0.3);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#00ff9d;text-align:center;">🎁 <strong>First Month Promo:</strong> Earn $${p.promo} USDT instead of $${p.monthly}!</div>` : ''}
+      <button class="plan-buy-btn">ACTIVATE PLAN — $${p.price} USDT</button>
+    </div>
+  `).join('');
+}
+
+function openPlanModal(planId) {
+  const plan = PLANS.find(p => p.id === planId);
+  if (!plan) return;
+  document.getElementById('modal-title').textContent = `${plan.emoji} ${plan.name} Plan — $${plan.price}`;
+  document.getElementById('modal-sub').textContent = `${plan.power}x power · $${plan.daily}/day · $${plan.monthly}/month`;
+  const promoNote = plan.promo ? `<div class="modal-step"><div class="modal-step-icon">🎁</div><div class="modal-step-text">First Month Promo: Earn <strong>$${plan.promo} USDT</strong> instead of $${plan.monthly}! After month 1, normal rate applies.</div></div>` : '';
+  document.getElementById('modal-steps').innerHTML = `
+    ${promoNote}
+    <div class="modal-step"><div class="modal-step-icon">1️⃣</div><div class="modal-step-text">Send exactly <strong>$${plan.price} USDT (TRC-20)</strong> to the wallet address below</div></div>
+    <div class="modal-step"><div class="modal-step-icon">2️⃣</div><div class="modal-step-text">Our system <strong>automatically detects</strong> your payment on the blockchain</div></div>
+    <div class="modal-step"><div class="modal-step-icon">⚡</div><div class="modal-step-text">Your plan activates <strong>within 1 minute</strong> — no screenshot needed!</div></div>
+    <div class="modal-step"><div class="modal-step-icon">✅</div><div class="modal-step-text">You will receive a <strong>Telegram notification</strong> once your plan is active</div></div>
+    <div class="modal-step"><div class="modal-step-icon">⚠️</div><div class="modal-step-text">Send <strong>exactly $${plan.price} USDT</strong> — other amounts may not be detected automatically</div></div>
+  `;
+  document.getElementById('modal-wallet').textContent = WALLET;
+  document.getElementById('modal-overlay').classList.add('open');
+  tg?.HapticFeedback?.impactOccurred('medium');
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+function copyWallet() {
+  navigator.clipboard?.writeText(WALLET).catch(()=>{});
+  showToast('✅ Wallet address copied!');
+}
+
+function shareRef() {
+  const link = `https://t.me/${BOT_USERNAME}?start=${state.userId || 'share'}`;
+  const text = `⛏️ Join me on AetherMine and earn USDT by mining!\n\nUse my link to start: ${link}`;
+  if (tg) {
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('⛏️ Join AetherMine and earn USDT!')}`);
+  } else {
+    navigator.share?.({ title:'AetherMine', text, url: link }) || navigator.clipboard?.writeText(text);
+    showToast('📋 Link copied to clipboard!');
+  }
+}
+
+function renderLeaderboard() {
+  const board = getLeaderboard();
+  const top10 = board.slice(0, 10);
+  const myEntry = board.find(p => p.isMe);
+
+  document.getElementById('lb-list').innerHTML = top10.map(u => `
+    <div class="lb-row" style="${u.isMe ? 'border-color:rgba(0,212,255,0.4);background:rgba(0,212,255,0.06)' : ''}">
+      <div class="lb-rank ${u.rank<=3?'top'+u.rank:''}">${u.rank<=3?['🥇','🥈','🥉'][u.rank-1]:u.rank}</div>
+      <div class="lb-avatar" style="background:rgba(0,212,255,0.1)">${u.emoji}${u.isMe ? '' : ''}</div>
+      <div class="lb-info">
+        <div class="lb-name">${u.name}${u.isMe ? ' <span style="font-size:10px;color:#00d4ff;font-weight:700">(You)</span>' : ''}</div>
+        <div class="lb-plan">${u.plan.charAt(0).toUpperCase()+u.plan.slice(1)} Plan</div>
+      </div>
+      <div class="lb-amount">$${u.score.toFixed(2)}</div>
+    </div>
+  `).join('');
+
+  // Show user position card
+  if (myEntry) {
+    const card = document.getElementById('my-rank-card');
+    card.style.display = 'block';
+    document.getElementById('my-rank-num').textContent = '#' + myEntry.rank;
+    document.getElementById('my-rank-name').textContent = myEntry.name;
+    document.getElementById('my-rank-plan').textContent = myEntry.plan.charAt(0).toUpperCase() + myEntry.plan.slice(1) + ' Plan';
+    document.getElementById('my-rank-bal').textContent = '$' + myEntry.score.toFixed(4);
+  }
+}
+
+
+
+// Auto-update leaderboard scores every 60 seconds
+setInterval(() => {
+  const activePage = document.querySelector('.page.active');
+  if (activePage && activePage.id === 'page-lb') {
+    renderLeaderboard();
+  }
+}, 60000);
+
+function renderProfile() {
+  document.getElementById('profile-name').textContent = state.userName;
+  document.getElementById('profile-badge').textContent = state.plan.toUpperCase() + ' PLAN';
+  document.getElementById('ps-taps').textContent = state.taps.toLocaleString();
+  document.getElementById('ps-earned').textContent = state.balance.toFixed(2);
+  document.getElementById('ps-days').textContent = state.daysActive;
+  const planColors = { free:'badge-free', starter:'badge-free', bronze:'', silver:'', gold:'', platinum:'', diamond:'badge-diamond' };
+  document.getElementById('profile-badge').className = 'profile-plan-badge ' + (planColors[state.plan] || 'badge-free');
+
+  document.getElementById('tx-history').innerHTML = [
+    { icon:'⛏️', label:'Mining Reward', date:'Today', amount:'+'+state.balance.toFixed(4)+' USDT', type:'earn' },
+    { icon:'🎁', label:'Welcome Bonus', date:'Day 1', amount:'+0.0100 USDT', type:'earn' },
+  ].map(tx => `
+    <div class="tx-row">
+      <div class="tx-icon">${tx.icon}</div>
+      <div class="tx-info"><div class="tx-label">${tx.label}</div><div class="tx-date">${tx.date}</div></div>
+      <div class="tx-amount ${tx.type}">${tx.amount}</div>
+    </div>
+  `).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Init
+renderPlans();
+updateUI();
+renderProfile();
+</script>
+</body>
+</html>
