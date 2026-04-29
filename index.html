@@ -281,6 +281,59 @@
   .energy-row { display:flex; align-items:center; gap:8px; margin-bottom:16px; }
   .energy-label { font-size:11px; color:var(--muted); white-space:nowrap; }
   .energy-bar { flex:1; height:6px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; }
+
+  /* WALLET PAGE */
+  .wallet-hero-card {
+    background:linear-gradient(135deg, rgba(0,212,255,0.12), rgba(123,95,255,0.12));
+    border:1px solid rgba(0,212,255,0.25); border-radius:20px; padding:24px 20px 20px;
+    text-align:center; margin-bottom:16px; position:relative; overflow:hidden;
+  }
+  .wallet-hero-card::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse at 50% 0%, rgba(0,212,255,0.1) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .wallet-hero-label { font-size:11px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+  .wallet-hero-amount { font-family:'Orbitron',sans-serif; font-size:42px; font-weight:900; line-height:1;
+    background:linear-gradient(90deg, var(--accent), var(--green)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .wallet-hero-sub { font-size:13px; color:var(--muted); margin-bottom:16px; }
+  .wallet-hero-row { display:flex; align-items:center; justify-content:center; gap:0; background:rgba(0,0,0,0.2); border-radius:12px; padding:12px; }
+  .wallet-mini-stat { flex:1; text-align:center; }
+  .wallet-mini-val { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
+  .wallet-mini-label { font-size:10px; color:var(--muted); margin-top:3px; }
+  .wallet-mini-divider { width:1px; height:30px; background:rgba(255,255,255,0.1); }
+
+  .withdraw-card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:18px; margin-bottom:16px; }
+  .withdraw-card-title { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700; color:var(--accent); margin-bottom:14px; letter-spacing:1px; }
+  .withdraw-rules { background:rgba(0,255,157,0.05); border:1px solid rgba(0,255,157,0.15); border-radius:10px; padding:12px; margin-bottom:14px; }
+  .rule-item { font-size:12px; color:var(--muted); padding:3px 0; }
+  .rule-item strong { color:var(--text); }
+  .withdraw-input-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .withdraw-input-row { display:flex; gap:8px; }
+  .withdraw-input { flex:1; padding:11px 14px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:10px;
+    color:var(--text); font-family:'Rajdhani',sans-serif; font-size:14px; outline:none; }
+  .withdraw-input:focus { border-color:var(--accent); }
+  .withdraw-max-btn { padding:11px 14px; border-radius:10px; border:1px solid var(--accent); background:rgba(0,212,255,0.1);
+    color:var(--accent); font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .withdraw-fee-note { font-size:12px; color:var(--muted); margin:10px 0 14px; min-height:18px; }
+  .withdraw-btn { width:100%; padding:13px; border-radius:12px; border:none;
+    background:linear-gradient(90deg, var(--accent2), var(--accent)); color:#fff;
+    font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; cursor:pointer; letter-spacing:1px; }
+  .withdraw-btn:active { opacity:0.85; transform:scale(0.98); }
+  .withdraw-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+  .w-history-title { font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:var(--accent); margin-bottom:12px; letter-spacing:1px; }
+  .w-empty { text-align:center; color:var(--muted); font-size:13px; padding:20px; }
+  .w-tx-row { display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+  .w-tx-icon { font-size:20px; }
+  .w-tx-info { flex:1; }
+  .w-tx-label { font-size:13px; font-weight:600; }
+  .w-tx-addr { font-size:10px; color:var(--muted); margin-top:2px; font-family:'Orbitron',sans-serif; }
+  .w-tx-right { text-align:right; }
+  .w-tx-amount { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700; color:var(--accent3); }
+  .w-tx-status { font-size:10px; margin-top:2px; }
+  .w-tx-status.pending { color:var(--gold); }
+  .w-tx-status.paid { color:var(--green); }
   .energy-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--accent3),var(--gold)); transition:width 0.3s; }
   .energy-num { font-size:11px; color:var(--gold); white-space:nowrap; font-weight:700; }
 </style>
@@ -308,8 +361,8 @@
         <div class="balance-amount" id="balance-display">0.0000</div>
         <div class="balance-sub">USDT</div>
         <div class="balance-row">
-          <div class="stat-pill">Power: <span id="stat-power">1x</span></div>
-          <div class="stat-pill">Daily: <span id="stat-daily">0.5</span> USDT</div>
+          <div class="stat-pill">Power: <span id="stat-power">0.1x</span></div>
+          <div class="stat-pill">Daily: <span id="stat-daily">0.05</span> USDT</div>
           <div class="stat-pill">Refs: <span id="stat-refs">0</span></div>
         </div>
       </div>
@@ -337,7 +390,7 @@
             <span class="miner-btn-label">TAP</span>
           </button>
         </div>
-        <div class="miner-power">Mining Power: <span id="power-display">1x</span></div>
+        <div class="miner-power">Mining Power: <span id="power-display">0.1x</span></div>
       </div>
 
       <div class="progress-section">
@@ -422,6 +475,64 @@
       </div>
     </div>
 
+    <!-- WALLET PAGE -->
+    <div class="page" id="page-wallet">
+      <div class="page-title">My Wallet</div>
+      <div class="page-sub">Your AetherMine earnings</div>
+
+      <!-- TOTAL BALANCE CARD -->
+      <div class="wallet-hero-card">
+        <div class="wallet-hero-label">Total Balance</div>
+        <div class="wallet-hero-amount" id="w-total">0.0000</div>
+        <div class="wallet-hero-sub">USDT</div>
+        <div class="wallet-hero-row">
+          <div class="wallet-mini-stat">
+            <div class="wallet-mini-val" id="w-mining">0.0000</div>
+            <div class="wallet-mini-label">⛏️ Mining</div>
+          </div>
+          <div class="wallet-mini-divider"></div>
+          <div class="wallet-mini-stat">
+            <div class="wallet-mini-val" id="w-referral">0.00</div>
+            <div class="wallet-mini-label">👥 Referral</div>
+          </div>
+          <div class="wallet-mini-divider"></div>
+          <div class="wallet-mini-stat">
+            <div class="wallet-mini-val" id="w-daily">0.05</div>
+            <div class="wallet-mini-label">📈 Daily Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WITHDRAW CARD -->
+      <div class="withdraw-card">
+        <div class="withdraw-card-title">📤 Withdraw Earnings</div>
+        <div class="withdraw-rules">
+          <div class="rule-item">✅ Minimum withdrawal: <strong>$5 USDT</strong></div>
+          <div class="rule-item">✅ Processing time: <strong>24–48 hours</strong></div>
+          <div class="rule-item">✅ Fee: <strong>5%</strong></div>
+          <div class="rule-item">✅ Network: <strong>TRC-20 (USDT)</strong></div>
+          <div class="rule-item">✅ One request per: <strong>24 hours</strong></div>
+        </div>
+        <div class="withdraw-form">
+          <div class="withdraw-input-label">Amount (USDT)</div>
+          <div class="withdraw-input-row">
+            <input type="number" id="w-amount" placeholder="Min $5.00" min="5" step="0.01" class="withdraw-input"/>
+            <button class="withdraw-max-btn" onclick="setMaxWithdraw()">MAX</button>
+          </div>
+          <div class="withdraw-input-label" style="margin-top:12px;">Your TRC-20 Wallet Address</div>
+          <input type="text" id="w-address" placeholder="T..." class="withdraw-input" style="width:100%;margin-top:6px;"/>
+          <div class="withdraw-fee-note" id="w-fee-note"></div>
+          <button class="withdraw-btn" onclick="requestWithdraw()">📤 REQUEST WITHDRAWAL</button>
+        </div>
+      </div>
+
+      <!-- WITHDRAWAL HISTORY -->
+      <div class="w-history-title">WITHDRAWAL HISTORY</div>
+      <div id="w-history-list">
+        <div class="w-empty">No withdrawals yet</div>
+      </div>
+    </div>
+
     <!-- PROFILE PAGE -->
     <div class="page" id="page-profile">
       <div class="profile-hero">
@@ -455,6 +566,10 @@
     <button class="nav-btn" onclick="showPage('lb',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
       Rankings
+    </button>
+    <button class="nav-btn" onclick="showPage('wallet',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="currentColor"/><path d="M22 10V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v3"/></svg>
+      Wallet
     </button>
     <button class="nav-btn" onclick="showPage('profile',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -547,8 +662,8 @@ let state = {
   energy: 500,
   maxEnergy: 500,
   plan: 'free',
-  power: 1,
-  daily: 0.5,
+  power: 0.1,
+  daily: 0.05,
   refs: 0,
   refEarned: 0,
   userId: null,
@@ -572,11 +687,57 @@ function loadState() {
   try {
     const s = localStorage.getItem('aethermine_state');
     if (s) Object.assign(state, JSON.parse(s));
+
+    // ── MIGRATION: fix old free-tier defaults (power:1, daily:0.5) ──────────
+    if (state.plan === 'free' && state.power === 1 && state.daily === 0.5) {
+      state.power = 0.1;
+      state.daily = 0.05;
+      saveState();
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    // Calculate energy that refilled while user was away
+    const lastSeen = localStorage.getItem('aethermine_last_seen');
+    if (lastSeen) {
+      const secondsAway = Math.floor((Date.now() - parseInt(lastSeen)) / 1000);
+      const energyPerSecond = 1 / 3; // 1 energy per 3 seconds (matches regen interval)
+      const refilledEnergy = Math.floor(secondsAway * energyPerSecond);
+      if (refilledEnergy > 0) {
+        state.energy = Math.min(state.maxEnergy, state.energy + refilledEnergy);
+      }
+    }
   } catch(e){}
 }
 function saveState() {
-  try { localStorage.setItem('aethermine_state', JSON.stringify(state)); } catch(e){}
+  try {
+    localStorage.setItem('aethermine_state', JSON.stringify(state));
+    localStorage.setItem('aethermine_last_seen', Date.now().toString());
+  } catch(e){}
 }
+
+// Save timestamp when user leaves
+window.addEventListener('beforeunload', () => {
+  localStorage.setItem('aethermine_last_seen', Date.now().toString());
+  saveState();
+});
+window.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    localStorage.setItem('aethermine_last_seen', Date.now().toString());
+    saveState();
+  } else {
+    // User came back — recalculate energy
+    const lastSeen = localStorage.getItem('aethermine_last_seen');
+    if (lastSeen) {
+      const secondsAway = Math.floor((Date.now() - parseInt(lastSeen)) / 1000);
+      const refilledEnergy = Math.floor(secondsAway / 3);
+      if (refilledEnergy > 0) {
+        state.energy = Math.min(state.maxEnergy, state.energy + refilledEnergy);
+        updateUI();
+        saveState();
+      }
+    }
+  }
+});
 
 loadState();
 if (state.userName === 'Miner' && tg?.initDataUnsafe?.user?.first_name) {
@@ -610,6 +771,7 @@ function showPage(name, btn) {
   btn.classList.add('active');
   if (name === 'lb') renderLeaderboard();
   if (name === 'profile') renderProfile();
+  if (name === 'wallet') { updateWalletUI(); renderWithdrawHistory(); }
 }
 
 // Tap mining
@@ -658,7 +820,7 @@ setInterval(() => {
 function updateUI() {
   document.getElementById('balance-display').textContent = state.balance.toFixed(4);
   document.getElementById('stat-power').textContent = state.power + 'x';
-  document.getElementById('stat-daily').textContent = state.daily.toFixed(1);
+  document.getElementById('stat-daily').textContent = state.daily.toFixed(2);
   document.getElementById('stat-refs').textContent = state.refs;
   document.getElementById('power-display').textContent = state.power + 'x';
   document.getElementById('hdr-name').textContent = state.userName;
@@ -813,6 +975,125 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── WALLET FUNCTIONS ─────────────────────────────────────────────────────────
+function updateWalletUI() {
+  const total = state.balance + state.refEarned;
+  document.getElementById('w-total').textContent = total.toFixed(4);
+  document.getElementById('w-mining').textContent = state.balance.toFixed(4);
+  document.getElementById('w-referral').textContent = state.refEarned.toFixed(2);
+  document.getElementById('w-daily').textContent = state.daily.toFixed(2);
+}
+
+function setMaxWithdraw() {
+  const total = state.balance + state.refEarned;
+  const max = Math.max(0, total).toFixed(2);
+  document.getElementById('w-amount').value = max;
+  calcFee();
+}
+
+function calcFee() {
+  const amt = parseFloat(document.getElementById('w-amount').value) || 0;
+  if (amt > 0) {
+    const fee = (amt * 0.05).toFixed(4);
+    const receive = (amt - fee).toFixed(4);
+    document.getElementById('w-fee-note').textContent = `Fee: $${fee} USDT → You receive: $${receive} USDT`;
+  } else {
+    document.getElementById('w-fee-note').textContent = '';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const amtInput = document.getElementById('w-amount');
+  if (amtInput) amtInput.addEventListener('input', calcFee);
+});
+
+function requestWithdraw() {
+  const amount = parseFloat(document.getElementById('w-amount').value) || 0;
+  const address = document.getElementById('w-address').value.trim();
+  const total = state.balance + state.refEarned;
+
+  // Silver ($25) and above only — user only finds out here when they try
+  const eligiblePlans = ['silver','gold','platinum','diamond'];
+  if (!eligiblePlans.includes(state.plan)) {
+    showToast('🔒 Withdrawals require Silver plan ($25) or above');
+    return;
+  }
+  if (amount < 5) { showToast('❌ Minimum withdrawal is $5 USDT'); return; }
+  if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address)) {
+    showToast('❌ Invalid TRC-20 address — must be 34 chars starting with T'); return;
+  }
+  if (amount > total + 0.0001) { showToast('❌ Insufficient balance'); return; }
+
+  const fee = amount * 0.05;
+  const receive = (amount - fee).toFixed(4);
+
+  // Save withdrawal request locally
+  const withdrawals = JSON.parse(localStorage.getItem('aethermine_withdrawals') || '[]');
+  const req = {
+    id: Date.now(),
+    amount: amount,
+    fee: fee.toFixed(4),
+    receive: receive,
+    address: address,
+    status: 'pending',
+    date: new Date().toLocaleDateString()
+  };
+  withdrawals.unshift(req);
+  localStorage.setItem('aethermine_withdrawals', JSON.stringify(withdrawals));
+
+  // Deduct from balance
+  if (amount <= state.balance) {
+    state.balance -= amount;
+  } else {
+    const fromRef = amount - state.balance;
+    state.balance = 0;
+    state.refEarned = Math.max(0, state.refEarned - fromRef);
+  }
+  saveState();
+  updateUI();
+  updateWalletUI();
+  renderWithdrawHistory();
+
+  // Send to bot via Telegram
+  if (tg) {
+    tg.sendData(JSON.stringify({
+      action: 'withdraw',
+      amount: amount,
+      receive: receive,
+      address: address,
+      user: state.userName
+    }));
+  }
+
+  document.getElementById('w-amount').value = '';
+  document.getElementById('w-address').value = '';
+  document.getElementById('w-fee-note').textContent = '';
+
+  showToast('✅ Withdrawal request submitted!');
+}
+
+function renderWithdrawHistory() {
+  const withdrawals = JSON.parse(localStorage.getItem('aethermine_withdrawals') || '[]');
+  const container = document.getElementById('w-history-list');
+  if (!withdrawals.length) {
+    container.innerHTML = '<div class="w-empty">No withdrawals yet</div>';
+    return;
+  }
+  container.innerHTML = withdrawals.slice(0, 10).map(w => `
+    <div class="w-tx-row">
+      <div class="w-tx-icon">📤</div>
+      <div class="w-tx-info">
+        <div class="w-tx-label">Withdrawal Request</div>
+        <div class="w-tx-addr">${w.address.substring(0,16)}...${w.address.slice(-6)}</div>
+      </div>
+      <div class="w-tx-right">
+        <div class="w-tx-amount">-$${parseFloat(w.amount).toFixed(2)}</div>
+        <div class="w-tx-status ${w.status}">${w.status === 'pending' ? '⏳ Pending' : '✅ Paid'}</div>
+      </div>
+    </div>
+  `).join('');
 }
 
 // Init
